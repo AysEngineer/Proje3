@@ -1,65 +1,89 @@
-# ESP32-CAM-QR-KeepingDocument
-# ESP32-CAM modülünün QR kodları okuma yeteneği ve Bluetooth ile veri iletimi özelliklerini kullanarak döküman saklar
-# #
-Bu proje, ESP32-CAM modülünü kullanarak, bir doküman okuma ve saklama sisteminin temel işlevlerini gerçekleştirir. Proje, QR kodlarını okuyan bir okuma modülü ve Bluetooth üzerinden veri iletimi sağlamak için Bluetooth Serial kullanarak bir doküman saklama sistemine dönüştürülmüştür.
+# ESP32-CAM QR Document Verification & Storage System
 
- ESP32-CAM modülünün QR kodları okuma yeteneği ve Bluetooth ile veri iletimi özelliklerini kullanarak, her okunan dokümanı sayar, saklar ve kontrol eder. Bu yazılım, bir motorun çalıştırılmasıyla birlikte saklanan dokümanın işlemiyle ilgili bir süreölçer ve zamanlayıcı yönetimi sağlar.
+This repository contains the firmware for an automated document reading, verification, and storage system prototype. Built around the **ESP32-CAM** platform, the system integrates a hardware-based QR-code scanning module, non-volatile data persistence via EEPROM, and real-time wireless data logging using Bluetooth Serial.
 
-Özellikler
-QR Kod Okuma: QR kodlarını okumak için  QR okuma modülü kullanılır.
-Bluetooth İletişimi: Bluetooth Serial kullanılarak cihazdan bilgisayar veya telefon gibi başka cihazlara veri iletimi yapılır.
-Motor Kontrolü: Saklanan her dokümanla birlikte motor çalıştırılarak bir işlem gerçekleştirilir.
-EEPROM Veri Saklama: Okunan doküman sayıları EEPROM içinde saklanır ve cihaz yeniden başlatıldığında bile bu veriler korunur.
-LED ve Buzzer Uyarıları: Sistem durumuna göre LED ışıkları ve/veya buzzer kullanılarak görsel ve sesli uyarılar yapılır.
-Sistem Zamanlayıcısı: QR kodları okunduktan sonra motor işlemleri belirli bir süre için çalıştırılır ve sonrasında motor durdurulur.
-Kullanılan Donanımlar
-ESP32-CAM: Dokümanları okuma ve veri işleme görevlerini yerine getiren ana mikrodenetleyici.
-Bluetooth Modülü: Bluetooth üzerinden veri iletimi yapmak için BluetoothSerial kütüphanesi kullanılır.
-QR Okuma Modülü: QR kodlarını okur ve ESP32'ye iletir.
-Motor ve Röle: Doküman işlemi sırasında motorun çalıştırılması için kontrol edilir.
-LED ve Buzzer: Sistem durumlarına göre uyarı vermek için kullanılır.
-Bağlantılar
-QR Modülü (RX/TX): ESP32-CAM modülünün GPIO 1 (TX) ve GPIO 3 (RX) pinlerine bağlanır.
-Bluetooth Seri Bağlantı: Bluetooth modülü ile veri alışverişi yapabilmek için ESP32'nin dahili Bluetooth Serial kullanılır.
-Motor Kontrol: Motor, 12 ve 14 numaralı GPIO pinlerine bağlı motor aracılığıyla kontrol edilir.
-LED ve Buzzer: LED ışığı ve buzzer, sırasıyla GPIO 33 ve GPIO 4 pinlerine bağlanır.
-Yazılımın Yapısı
-1. QR Kod Okuma Fonksiyonu (QRReadFunction)
-QR kodları okuma işlemi için ESP32'nin UART arayüzü kullanılır. QR okuma modülünden gelen veriler, belirli bir formatta alınır ve işlenir. Okunan veriler, Bluetooth üzerinden iletilmek üzere bir kuyruğa eklenir.
+## 📌 Overview & Operational Logic
+The system automates document workflow management by tracking, counting, and validating incoming documents. Upon detecting a document via the QR reader, the system triggers an integrated motor/relay mechanism to process the document physically. An internal non-blocking timer manages the operational cycles and safeguards the motor hardware with built-in timeout routines.
 
-2. Bluetooth Veri İletimi (BluetoothFunction)
-Bluetooth Serial kullanılarak okunan veriler, cihazdan başka bir Bluetooth destekli cihaza (örneğin telefon veya bilgisayar) gönderilir. Sistem, Bluetooth üzerinden alınan komutlara göre motoru çalıştırır, sayacı sıfırlar veya belirli işlemleri gerçekleştirir.
+---
 
-3. Motor Kontrol Fonksiyonu (MotorRun)
-Motor, gelen QR kodu okuma talimatlarına göre çalıştırılır. Motorun durumu (FORWARD, REVERSE, STOP) GPIO pinleriyle kontrol edilir. Motor çalışma süreleri, MotorTimeoutT1 ile izlenir ve belirli bir süre sonra motor otomatik olarak durdurulur.
+## 🚀 Key Features
 
-4. EEPROM Veri Saklama
-Okunan her doküman, bir sayaç aracılığıyla sayılır ve EEPROM belleğe kaydedilir. EEPROM'da saklanan bu veri, cihaz yeniden başlatıldığında bile korunur. Bu özellik, sistemin her çalıştırıldığında kaldığı yerden devam etmesini sağlar.
+- **Hardware QR Code Scanning:** Interfaced with a dedicated UART-based QR scanning module for rapid and reliable data acquisition.
+- **Wireless Telemetry (Bluetooth Serial):** Transmits scanned document data wirelessly to a connected PC or mobile device using the ESP32's native `BluetoothSerial` library. Accepts incoming Bluetooth commands for remote control (e.g., triggering motors, resetting counters).
+- **Automated Motor Control:** Drives a DC motor/relay subsystem with full directional control (`FORWARD`, `REVERSE`, `STOP`) based on authorization states.
+- **Hardware Protection (Timeout Management):** Implements a firmware timer (`MotorTimeoutT1`) that automatically stops the motor after a defined execution window to prevent mechanical or electrical stress.
+- **Data Persistence (EEPROM):** Persists total processed document counts inside the microcontroller's EEPROM. Data survives power cycles and system reboots, ensuring structural continuity.
+- **Audiovisual Diagnostic Alerts:** Direct status feedback (Success, Failure, System Idle) via onboard LED and Buzzer indicators.
 
-5. Zamanlayıcılar ve Durum Yönetimi
-Sistem, her QR kod okuma işlemi arasında motor çalıştırma işlemlerini yönetmek için zamanlayıcılar kullanır. Her QR okuma ve motor çalışma durumu, belirli bir süre sonunda otomatik olarak sıfırlanır veya bir sonraki adıma geçilir.
+---
 
-Gereksinimler
-ESP32-CAM modülü
-QR Kod Okuma Modülü (RS232/UART tabanlı bir modül)
-Bluetooth Bağlantısı olan bir cihaz (telefon veya bilgisayar)
-Arduino IDE ile programlama (ESP32 desteği eklenmiş olmalı)
-Kurulum Adımları
-Arduino IDE Kurulumu:
+## 🛠️ Tech Stack & Hardware Components
 
-ESP32 modülünü Arduino IDE'ye eklemek için ESP32 Arduino kurulum kılavuzunu takip edebilirsiniz.
-Gerekli kütüphaneleri yükleyin: BluetoothSerial, EEPROM, ve diğer bağımlı kütüphaneler.
-Donanım Bağlantıları:
+- **Main Controller:** ESP32-CAM Modality
+- **Communication Module:** Internal Bluetooth (via `BluetoothSerial` library)
+- **Scanning Peripheral:** UART/RS232-based QR-Code Reader Module
+- **Actuators:** DC Motor and Relay Circuitry
+- **Indicators:** Standard LED and Active/Passive Buzzer
+- **Development Environment:** Arduino IDE (with ESP32 Core extension)
 
-QR Kod Modülü: ESP32'nin RX ve TX pinlerine bağlanmalıdır.
-Motor Kontrolü: Motorlar, 12 ve 14 numaralı GPIO pinlerine bağlı röleler aracılığıyla çalıştırılır.
-Bluetooth: ESP32'nin dahili Bluetooth modülü kullanılır.
-Yazılımın Yüklenmesi:
+---
 
-Arduino IDE üzerinden bu projeyi açın ve ESP32'yi seçin.
-Kodu derleyin ve ESP32 modülüne yükleyin.
-Çalıştırma:
+## 🔌 Hardware Pin Mapping
 
-ESP32 cihazınızı çalıştırın.
-Bluetooth cihazınızı bağlayın ve bağlantıyı kontrol edin.
-QR kodlarını okutun, motoru çalıştırın ve işlemlerin Bluetooth üzerinden iletildiğini kontrol edin.
+| Peripheral | ESP32-CAM Pin / GPIO | Interface Type | Function |
+| :--- | :--- | :--- | :--- |
+| **QR Reader Module** | GPIO 1 (TX) & GPIO 3 (RX) | UART Hardware Serial | Data stream reception from the scanner |
+| **Bluetooth Interface** | Internal SoC Antenna | Bluetooth Serial | Wireless host communication |
+| **Motor Drive Control** | GPIO 12 & GPIO 14 | Digital Output (Relay) | Actuator direction and state execution |
+| **Status LED** | GPIO 33 | Digital Output | Visual system alerts |
+| **Buzzer** | GPIO 4 | PWM / Digital Output | Audible feedback tones |
+
+---
+
+## 🧠 Firmware Architecture & Key Subsystems
+
+The source code is structured modularly around asynchronous tasks and non-blocking timers:
+
+1. **`QRReadFunction`**: Monitors the custom UART bus. Once a QR string payload is decoded, it packs the data and places it into a transmission queue.
+2. **`BluetoothFunction`**: Handles bidirectional wireless data packages. It reports metrics to the host and parses incoming operational overrides.
+3. **`MotorRun`**: Controls the physical relay bridge. Operates in `FORWARD`, `REVERSE`, or `STOP` states and is strictly monitored by the `MotorTimeoutT1` function.
+4. **EEPROM Storage Layer**: Writes data increments directly to persistent sectors after every successful scan cycle, keeping the system state resilient.
+
+---
+
+## 💻 Installation & Deployment
+
+1. Set up the **ESP32 Board Support Package (BSP)** within your Arduino IDE environment.
+2. Install necessary dependencies (Internal `BluetoothSerial.h` and `EEPROM.h` libraries).
+3. Connect the QR module and motor-relay boards according to the **Hardware Pin Mapping** table above.
+4. Compile and flash the firmware onto your target ESP32-CAM module.
+5. Launch a Bluetooth serial terminal on your host machine/smartphone, pair with the device, and monitor incoming logs or inject control frames.
+---
+
+## 🗺️ Future Roadmap / Phase 2: Python & OpenCV Integration
+
+The next phase of this project focuses on migrating from a dedicated hardware QR scanning peripheral to an intelligent, software-driven computer vision pipeline, eliminating extra hardware costs and expanding system capabilities.
+
+### 🔄 Planned System Architecture
+1. **Edge Video Streaming:** The ESP32-CAM will be configured as a lightweight Wi-Fi/HTTP or WebSocket streaming server to broadcast live JPEG video frames of the document.
+2. **Python Backend & OpenCV Pipeline:** A companion host application written in Python will capture the live stream. Utilizing the **OpenCV** and **ZBar** libraries, the backend will perform real-time image pre-processing (grayscale conversion, thresholding, and binarization) to detect and decode QR codes via software.
+3. **Closed-Loop IoT Feedback:** Once the Python backend validates the extracted document token, it will transmit a secure execution command back to the ESP32-CAM via Wi-Fi or Bluetooth Serial to trigger the motor/relay subsystem.
+
+This migration will demonstrate high-speed wireless video networking, multi-platform IoT integration (Microcontroller to PC), and advanced image processing capabilities.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
