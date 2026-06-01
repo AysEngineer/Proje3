@@ -1,4 +1,4 @@
-# ESP32-CAM-QR-
+# ESP32-CAM-QR-KeepingDocument
 # ESP32-CAM modülünün QR kodları okuma yeteneği ve Bluetooth ile veri iletimi özelliklerini kullanarak döküman saklar
 # #
 Bu proje, ESP32-CAM modülünü kullanarak, bir doküman okuma ve saklama sisteminin temel işlevlerini gerçekleştirir. Proje, QR kodlarını okuyan bir okuma modülü ve Bluetooth üzerinden veri iletimi sağlamak için Bluetooth Serial kullanarak bir doküman saklama sistemine dönüştürülmüştür.
